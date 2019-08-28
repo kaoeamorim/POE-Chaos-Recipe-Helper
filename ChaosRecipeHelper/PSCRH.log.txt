@@ -1,0 +1,1 @@
+{'1h, 2h or Shield': 0, 'Helmet': 0, 'Chest': 0, 'Gloves': 0, 'Boots': 0, 'Belt': 0, 'Amulet': 0, 'Ring': 0}
