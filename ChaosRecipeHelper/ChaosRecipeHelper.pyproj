@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>8491da43-bf0d-4a1c-978a-9a7e35ece81f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>module1.py</StartupFile>
+    <StartupFile>POE Chaos Recipe Helper.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,9 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ChaosRecipeHelper.py" />
-    <Compile Include="module1.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="POE Chaos Recipe Helper.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
