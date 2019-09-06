@@ -9,10 +9,11 @@ window.title("PoE Chaos Recipe Helper")
 
 timeCount = 0
 isCancel = False
+callsCount = 0
 
 
 itemClasses = ('1h or Shield', '2h or Bow', 'Helmet', 'Chest','Gloves','Boots', 'Belt', 'Amulet', 'Ring')
-weapons1h = ('dagger','claw','onesword','wand','shield','oneaxe')
+weapons1h = ('dagger','claw','onesword','wand','shield','oneaxe', 'onemace')
 weapons2h = ('twomace', 'twoaxe', 'twosword', 'bow', 'staff')
 
   
@@ -22,17 +23,31 @@ def populate(itemList, weapons1h, weapons2h):
 
     global isCancel
 
+    global callsCount
+
     isCancel = False
+    stuffs.cancelButton.configure(state='normal')
 
-    timeCount = time()
-
-    infos = {"POESESSID":{'POESESSID':stuffs.sessID.get()},'ACCOUNT':stuffs.accountName.get(),'CHARACTER':stuffs.characterName.get(),'LEAGUE':stuffs.plg.get()}
+    infos = {"POESESSID":{'POESESSID':stuffs.sessID.get()},'ACCOUNT':stuffs.accountName.get(),'CHARACTER':stuffs.characterName.get(),'LEAGUE':stuffs.plg.get(), 'REALM':stuffs.realm.get()}
 
     itemList = {k:0 for k in itemList}
 
     try:
 
-        for tab in range(0,12):
+        if 'tabNames' not in globals():
+
+            callsCount += 1
+
+            global tabNames
+
+            tabNames = requests.get("https://www.pathofexile.com/character-window/get-stash-items?accountName=" + infos['ACCOUNT'] + "&tabIndex=" + str(0) + "&league=" + infos['LEAGUE'] + '&tabs=1', cookies = infos['POESESSID'])
+
+            tabNames = json.loads(tabNames.text)
+
+        tab = 0
+
+        while tab < tabNames['numTabs']:
+        #for tab in range(0,tabNames['numTabs']):
 
             if isCancel == True:
 
@@ -42,7 +57,34 @@ def populate(itemList, weapons1h, weapons2h):
                 stuffs.statusText.configure(state='disabled')
                 stuffs.updateButton.configure(state='normal')
 
+
                 return itemList
+
+            if callsCount >= 45:
+
+                stuffs.statusText.configure(state='normal')
+                stuffs.statusText.delete(0,'end')
+                stuffs.statusText.insert(0,f"Waiting to avoid timeout. Resuming in {70 - abs(int(time() - timeCount))} seconds.")
+                stuffs.statusText.configure(state='disabled')
+
+                window.update()
+
+                sleep(1)
+
+                window.update()
+
+
+                if abs(int(time() - timeCount)) >= 70:
+
+                    timeCount = time()
+
+                    callsCount = 0
+
+                continue
+
+            #timeCount = time()
+
+            callsCount += 1
 
             resp = requests.get("https://www.pathofexile.com/character-window/get-stash-items?accountName=" + infos['ACCOUNT'] + "&tabIndex=" + str(tab) + "&league=" + infos['LEAGUE'], cookies = infos['POESESSID'])
 
@@ -55,16 +97,24 @@ def populate(itemList, weapons1h, weapons2h):
                 stuffs.statusText.insert(0,f"Error received the from API. Check if all the information is correct")
                 stuffs.statusText.configure(state='disabled')
 
-                timeCount = 0 
+                print(resp['error']['message'])
+
+                if resp['error']['code'] == 3:
+
+                    stuffs.statusText.configure(state='normal')
+                    stuffs.statusText.delete(0,'end')
+                    stuffs.statusText.insert(0,f"Time out. Too many requests. Hopefully for only 60 seconds.")
+                    stuffs.statusText.configure(state='disabled')
+
 
                 return itemList
 
-            stuffs.cancelButton.configure(state='normal')
 
+            #callsCount += 1
 
-            tabNames = requests.get("https://www.pathofexile.com/character-window/get-stash-items?accountName=" + infos['ACCOUNT'] + "&tabIndex=" + str(tab) + "&league=" + infos['LEAGUE'] + '&tabs=1', cookies = infos['POESESSID'])
+            #tabNames = requests.get("https://www.pathofexile.com/character-window/get-stash-items?accountName=" + infos['ACCOUNT'] + "&tabIndex=" + str(tab) + "&league=" + infos['LEAGUE'] + '&tabs=1', cookies = infos['POESESSID'])
 
-            tabNames = json.loads(tabNames.text)
+            #tabNames = json.loads(tabNames.text)
 
 
 
@@ -104,6 +154,8 @@ def populate(itemList, weapons1h, weapons2h):
                         except:
                             itemList[resp['items'][x]['category'][category][0].capitalize()] = 1
 
+            tab = tab + 1
+
 
         stuffs.statusText.configure(state='normal')
         stuffs.statusText.delete(0,'end')
@@ -113,6 +165,8 @@ def populate(itemList, weapons1h, weapons2h):
         window.update()
 
         sleep(0.3)
+
+        callsCount += 1
 
         req = requests.get("https://www.pathofexile.com/character-window/get-items?accountName=" + infos['ACCOUNT'] + "&character=" + infos['CHARACTER'], cookies = infos['POESESSID'])
 
@@ -178,7 +232,7 @@ def populate(itemList, weapons1h, weapons2h):
 
     except:
 
-        #raise
+        raise
 
         stuffs.statusText.configure(state='normal')
         stuffs.statusText.delete(0,'end')
@@ -230,6 +284,9 @@ class otherStuff():
         self.plg = tkinter.StringVar(window)
         self.plg.set('League')
 
+        self.realm = tkinter.StringVar(window)
+        self.realm.set('pc')
+
         leagues = self.getLeagues()
 
         self.updateButton = tkinter.Button(window,text = "Update", command = updateValues, width = 7, justify = 'center')
@@ -253,6 +310,9 @@ class otherStuff():
 
         self.playerLeague = tkinter.OptionMenu(window, self.plg, *leagues)
         self.playerLeagueText = tkinter.Label(window, text = 'Player League:')
+
+        self.playerRealm = tkinter.OptionMenu(window, self.realm, 'pc', 'xbox', 'sony' )
+        self.playerRealmText = tkinter.Label(window, text = 'Player Realm:')
 
 
 
@@ -283,6 +343,9 @@ class otherStuff():
         self.playerLeague.grid(column = 6, row = self.line + 7)
         self.playerLeagueText.grid(column = 5, row = self.line + 7)
 
+        self.playerRealm.grid(column = 6, row = self.line + 8)
+        self.playerRealmText.grid(column = 5, row = self.line + 8)
+
     def getLeagues(self):
 
         leagues = []
@@ -299,39 +362,45 @@ class otherStuff():
 
 def updateValues():
 
-    if abs(int(time() - timeCount)) < 10:
+    global timeCount
 
-        stuffs.statusText.configure(state='normal')
-        stuffs.statusText.delete(0,'end')
-        stuffs.statusText.insert(0,f"That's too fast! Please wait {10 - abs(int(time() - timeCount))} seconds")
-        stuffs.statusText.configure(state='disabled')
-        stuffs.updateButton.configure(state='normal')
+    if timeCount == 0 or abs(int(time() - timeCount)) >= 70:#abs(int(time() - timeCount)) < 10:
 
-    else:
+        timeCount = time()
 
-        stuffs.sessID.configure(state = 'disabled')
-        stuffs.accountName.configure(state='disabled')
-        stuffs.characterName.configure(state='disabled')
-        stuffs.playerLeague.configure(state='disabled')
-        stuffs.updateButton.configure(state='disabled')
+        #stuffs.statusText.configure(state='normal')
+        #stuffs.statusText.delete(0,'end')
+        #stuffs.statusText.insert(0,f"That's too fast! Please wait {10 - abs(int(time() - timeCount))} seconds")
+        #stuffs.statusText.configure(state='disabled')
+        #stuffs.updateButton.configure(state='normal')
+
+#else:
+
+    stuffs.sessID.configure(state = 'disabled')
+    stuffs.accountName.configure(state='disabled')
+    stuffs.characterName.configure(state='disabled')
+    stuffs.playerLeague.configure(state='disabled')
+    stuffs.updateButton.configure(state='disabled')
 
 
 
-        itemDict = populate(itemClasses,weapons1h,weapons2h)
+    itemDict = populate(itemClasses,weapons1h,weapons2h)
 
-        for key in itemDict:
-            items[key].update(itemDict[key])
+    for key in itemDict:
+        items[key].update(itemDict[key])
 
-        stuffs.sessID.configure(state = 'normal')
-        stuffs.accountName.configure(state='normal')
-        stuffs.characterName.configure(state='normal')
-        stuffs.playerLeague.configure(state='normal')
-        stuffs.updateButton.configure(state='normal')
+    stuffs.sessID.configure(state = 'normal')
+    stuffs.accountName.configure(state='normal')
+    stuffs.characterName.configure(state='normal')
+    stuffs.playerLeague.configure(state='normal')
+    stuffs.updateButton.configure(state='normal')
 
 def cancelUpdate():
 
     global isCancel
     isCancel = True
+
+    window.update()
 
     stuffs.cancelButton.configure(state='disabled')
 
