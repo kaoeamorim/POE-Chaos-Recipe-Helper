@@ -57,8 +57,6 @@ def populate(itemList, weapons1h, weapons2h):
                 stuffs.statusText.insert(0,f"Error received the from API. Check if all the information is correct")
                 stuffs.statusText.configure(state='disabled')
 
-                print(tabNames['error']['message']) #DELETE THIS LINE IN FINAL VERSION
-
                 if tabNames['error']['code'] == 3:
 
                     stuffs.statusText.configure(state='normal')
@@ -71,10 +69,7 @@ def populate(itemList, weapons1h, weapons2h):
 
         tab = 0
 
-        #tabsToCheckList = list(tabsToCheck)
-
         while tab <= max(tabsToCheck):
-        #for tab in range(0,tabNames['numTabs']):
 
             if tab not in tabsToCheck:
 
@@ -115,7 +110,6 @@ def populate(itemList, weapons1h, weapons2h):
 
                 continue
 
-            #timeCount = time()
 
             callsCount += 1
 
@@ -141,13 +135,6 @@ def populate(itemList, weapons1h, weapons2h):
 
 
                 return itemList
-
-
-            #callsCount += 1
-
-            #tabNames = requests.get("https://www.pathofexile.com/character-window/get-stash-items?accountName=" + infos['ACCOUNT'] + "&tabIndex=" + str(tab) + "&league=" + infos['LEAGUE'] + '&tabs=1', cookies = infos['POESESSID'])
-
-            #tabNames = json.loads(tabNames.text)
 
             tabsToCheck.remove(tab)
 
@@ -218,11 +205,6 @@ def populate(itemList, weapons1h, weapons2h):
 
             if category in ('armour','weapons','accessories') and resp["items"][x]["identified"] == False and resp["items"][x]["inventoryId"] == 'MainInventory' and resp['items'][x]['ilvl'] >= 60:
 
-                #print("Unidentified ",end="")
-                #print(f"{resp['items'][x]['category'][category][0]} in tab {tab}")
-
-                #statusText.
-
                 if resp['items'][x]['category'][category][0] in weapons1h:
 
                     try:
@@ -269,8 +251,6 @@ def populate(itemList, weapons1h, weapons2h):
         stuffs.totalSets.configure(state='disabled')
 
     except:
-
-        raise #DELETE IN FINAL VERSION
 
         stuffs.statusText.configure(state='normal')
         stuffs.statusText.delete(0,'end')
@@ -406,17 +386,9 @@ def updateValues():
 
     global timeCount
 
-    if timeCount == 0 or abs(int(time() - timeCount)) >= 70:#abs(int(time() - timeCount)) < 10:
+    if timeCount == 0 or abs(int(time() - timeCount)) >= 70:
 
         timeCount = time()
-
-        #stuffs.statusText.configure(state='normal')
-        #stuffs.statusText.delete(0,'end')
-        #stuffs.statusText.insert(0,f"That's too fast! Please wait {10 - abs(int(time() - timeCount))} seconds")
-        #stuffs.statusText.configure(state='disabled')
-        #stuffs.updateButton.configure(state='normal')
-
-#else:
 
     stuffs.sessID.configure(state = 'disabled')
     stuffs.accountName.configure(state='disabled')
