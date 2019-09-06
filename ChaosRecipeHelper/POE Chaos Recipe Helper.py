@@ -10,6 +10,7 @@ window.title("PoE Chaos Recipe Helper")
 timeCount = 0
 isCancel = False
 callsCount = 0
+tabsToCheck = {}
 
 
 itemClasses = ('1h or Shield', '2h or Bow', 'Helmet', 'Chest','Gloves','Boots', 'Belt', 'Amulet', 'Ring')
@@ -24,6 +25,8 @@ def populate(itemList, weapons1h, weapons2h):
     global isCancel
 
     global callsCount
+
+    global tabsToCheck
 
     isCancel = False
     stuffs.cancelButton.configure(state='normal')
@@ -44,14 +47,44 @@ def populate(itemList, weapons1h, weapons2h):
 
             tabNames = json.loads(tabNames.text)
 
+            tabsToCheck = {tabnum for tabnum in range(0,tabNames['numTabs'])}
+
+
+            if "error" in tabNames or len(tabNames) <= 1:
+
+                stuffs.statusText.configure(state='normal')
+                stuffs.statusText.delete(0,'end')
+                stuffs.statusText.insert(0,f"Error received the from API. Check if all the information is correct")
+                stuffs.statusText.configure(state='disabled')
+
+                print(tabNames['error']['message']) #DELETE THIS LINE IN FINAL VERSION
+
+                if tabNames['error']['code'] == 3:
+
+                    stuffs.statusText.configure(state='normal')
+                    stuffs.statusText.delete(0,'end')
+                    stuffs.statusText.insert(0,f"Time out. Too many requests. Hopefully for only 60 seconds.")
+                    stuffs.statusText.configure(state='disabled')
+
+                del tabNames
+                return itemList
+
         tab = 0
 
-        while tab < tabNames['numTabs']:
+        #tabsToCheckList = list(tabsToCheck)
+
+        while tab <= max(tabsToCheck):
         #for tab in range(0,tabNames['numTabs']):
+
+            if tab not in tabsToCheck:
+
+                tab = tab + 1
+
+                continue
 
             if isCancel == True:
 
-                stuffs.statusText.configure(state='normal')
+                stuffs.statusText.configure(state='nor6mal')
                 stuffs.statusText.delete(0,'end')
                 stuffs.statusText.insert(0,f"Operation aborted.")
                 stuffs.statusText.configure(state='disabled')
@@ -116,7 +149,7 @@ def populate(itemList, weapons1h, weapons2h):
 
             #tabNames = json.loads(tabNames.text)
 
-
+            tabsToCheck.remove(tab)
 
             stuffs.statusText.configure(state='normal')
             stuffs.statusText.delete(0,'end')
@@ -139,12 +172,16 @@ def populate(itemList, weapons1h, weapons2h):
                         except:
                             itemList['1h or Shield'] = 1
 
+                        tabsToCheck.add(tab)
+
                     elif resp['items'][x]['category'][category][0] in weapons2h:
 
                         try:
-                            itemlist['2h or Bow'] += 1
+                            itemList['2h or Bow'] += 1
                         except:
-                            itemlist['2h or Bow'] = 1
+                            itemList['2h or Bow'] = 1
+                        
+                        tabsToCheck.add(tab)
 
 
                     elif resp['items'][x]['category'][category][0] != 'quiver':
@@ -153,6 +190,7 @@ def populate(itemList, weapons1h, weapons2h):
                             itemList[resp['items'][x]['category'][category][0].capitalize()] += 1
                         except:
                             itemList[resp['items'][x]['category'][category][0].capitalize()] = 1
+                        tabsToCheck.add(tab)
 
             tab = tab + 1
 
@@ -195,9 +233,9 @@ def populate(itemList, weapons1h, weapons2h):
                 elif resp['items'][x]['category'][category][0] in weapons2h:
 
                     try:
-                        itemlist['2h or Bow'] += 1
+                        itemList['2h or Bow'] += 1
                     except:
-                        itemlist['2h or Bow'] = 1
+                        itemList['2h or Bow'] = 1
 
                 elif resp['items'][x]['category'][category][0] != 'quiver':
 
@@ -232,7 +270,7 @@ def populate(itemList, weapons1h, weapons2h):
 
     except:
 
-        raise
+        raise #DELETE IN FINAL VERSION
 
         stuffs.statusText.configure(state='normal')
         stuffs.statusText.delete(0,'end')
@@ -277,7 +315,7 @@ class itemClass():
 
 class otherStuff():
 
-    line = 4
+    line = 2
 
     def __init__(self):
 
@@ -287,11 +325,13 @@ class otherStuff():
         self.realm = tkinter.StringVar(window)
         self.realm.set('pc')
 
-        leagues = self.getLeagues()
+        leagues = 'Standard', 'herp' #self.getLeagues()
 
-        self.updateButton = tkinter.Button(window,text = "Update", command = updateValues, width = 7, justify = 'center')
+        self.updateButton = tkinter.Button(window,text = "Check tabs", command = updateValues, width = 10, justify = 'center')
 
-        self.cancelButton = tkinter.Button(window, text = 'Cancel', command = cancelUpdate, width = 7, justify = 'center')
+        self.forceCheck = tkinter.Button(window, text = "Recheck All", command = forceCheckAll, width = 10, justify = 'center')
+
+        self.cancelButton = tkinter.Button(window, text = 'Cancel', command = cancelUpdate, width = 10, justify = 'center')
 
         self.statusText = tkinter.Entry(window, width = 60)
 
@@ -320,10 +360,12 @@ class otherStuff():
 
         self.updateButton.grid(column = 5, row = self.line)
 
-        self.cancelButton.grid(column =5, row = self.line+1)
+        self.forceCheck.grid(column = 5, row = self.line+1)
+
+        self.cancelButton.grid(column =5, row = self.line+2)
         self.cancelButton.configure(state = 'disabled')
 
-        self.statusText.grid(column = 6, row = self.line + 1)
+        self.statusText.grid(column = 6, row = self.line + 2)
         self.statusText.configure(state='disabled')
 
         self.totalSets.grid(column = 3, row = self.line + 13)
@@ -394,6 +436,12 @@ def updateValues():
     stuffs.characterName.configure(state='normal')
     stuffs.playerLeague.configure(state='normal')
     stuffs.updateButton.configure(state='normal')
+
+def forceCheckAll():
+
+    del tabNames
+
+    updateValues()
 
 def cancelUpdate():
 
