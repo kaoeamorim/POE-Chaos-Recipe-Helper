@@ -79,7 +79,7 @@ def populate(itemList, weapons1h, weapons2h):
 
             if isCancel == True:
 
-                stuffs.statusText.configure(state='nor6mal')
+                stuffs.statusText.configure(state='normal')
                 stuffs.statusText.delete(0,'end')
                 stuffs.statusText.insert(0,f"Operation aborted.")
                 stuffs.statusText.configure(state='disabled')
@@ -305,7 +305,7 @@ class otherStuff():
         self.realm = tkinter.StringVar(window)
         self.realm.set('pc')
 
-        leagues = 'Standard', 'herp' #self.getLeagues()
+        leagues = self.getLeagues()
 
         self.updateButton = tkinter.Button(window,text = "Check tabs", command = updateValues, width = 10, justify = 'center')
 
